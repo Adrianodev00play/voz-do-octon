@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Client</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            overflow: hidden;
+            padding-right: 20px;
+        }
+        .container {
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+        h1 {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+        button {
+            font-size: 1.2em;
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+            opacity: 1; /* Visibilidade total */
+            transition: background-color 0.3s;
+        }
+        button:disabled {
+            background-color: #aaa;
+            cursor: not-allowed;
+        }
+        button:hover:not(:disabled) {
+            background-color: #0056b3;
+        }
+        button#connectButton.clicked {
+            background-color: #28a745; /* Cor verde quando clicado */
+        }
+        audio {
+            display: none;
+        }
+        #fullscreenIframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            z-index: 1;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <iframe id="fullscreenIframe" src="about:blank"></iframe>
+    <div class="container">
+        <h1>WebSocket Client</h1>
+        <button id="fullscreenButton">Tela Cheia e Paisagem</button>
+        <button id="connectButton">Conectar</button>
+        <button id="buttonA" disabled>vamos nos apresentar</button>
+        <button id="buttonB" disabled>como lidar com violência física</button>
+        <button id="buttonC" disabled>como lidar com violência psicológica</button>
+        <button id="buttonD" disabled>como lidar com violência sexual</button>
+        <button id="buttonE" disabled>como lidar com violência moral</button>
+        <button id="buttonF" disabled>faça um resumo de todas as violências citadas</button>
+        <button id="buttonG" disabled>Botão G</button>
+        <button id="buttonH" disabled>Botão H</button>
+        <audio id="som1" src="som1.mp3"></audio>
+        <audio id="som2" src="som2.mp3"></audio>
+        <audio id="som3" src="som3.mp3"></audio>
+        <audio id="som4" src="som4.mp3"></audio>
+        <audio id="som5" src="som5.mp3"></audio>
+        <audio id="som6" src="som6.mp3"></audio>
+        <audio id="som7" src="som7.mp3"></audio>
+        <audio id="som8" src="som8.mp3"></audio>
+        <audio id="somFrente" src="frente.mp3"></audio>
+        <audio id="somDireita" src="direita.mp3"></audio>
+        <audio id="somEsquerda" src="esquerda.mp3"></audio>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let socket;
+            const buttons = {
+                fullscreenButton: document.getElementById('fullscreenButton'),
+                connectButton: document.getElementById('connectButton'),
+                buttonA: document.getElementById('buttonA'),
+                buttonB: document.getElementById('buttonB'),
+                buttonC: document.getElementById('buttonC'),
+                buttonD: document.getElementById('buttonD'),
+                buttonE: document.getElementById('buttonE'),
+                buttonF: document.getElementById('buttonF'),
+                buttonG: document.getElementById('buttonG'),
+                buttonH: document.getElementById('buttonH')
+            };
+            const sounds = {
+                som1: document.getElementById('som1'),
+                som2: document.getElementById('som2'),
+                som3: document.getElementById('som3'),
+                som4: document.getElementById('som4'),
+                som5: document.getElementById('som5'),
+                som6: document.getElementById('som6'),
+                som7: document.getElementById('som7'),
+                som8: document.getElementById('som8'),
+                somFrente: document.getElementById('somFrente'),
+                somDireita: document.getElementById('somDireita'),
+                somEsquerda: document.getElementById('somEsquerda')
+            };
+            const allSounds = Object.values(sounds);
+
+            function stopAllSounds() {
+                allSounds.forEach(sound => {
+                    sound.pause();
+                    sound.currentTime = 0;
+                });
+            }
+
+            function enterFullscreenAndLockOrientation() {
+                if (screen.orientation && screen.orientation.lock) {
+                    screen.orientation.lock('landscape').catch(error => console.error('Error locking orientation:', error));
+                }
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen().catch(error => console.error('Error making fullscreen:', error));
+                }
+            }
+
+            function connectWebSocket() {
+                socket = new WebSocket('wss://jealous-magic-stargazer.glitch.me');
+
+                socket.onopen = () => {
+                    console.log('Conectado ao servidor WebSocket');
+                    Object.values(buttons).forEach(button => button.disabled = false);
+                };
+
+                socket.onmessage = event => {
+                    console.log('Mensagem recebida:', event.data);
+                    stopAllSounds();
+                    if (sounds[`som${event.data}`]) {
+                        sounds[`som${event.data}`].play();
+                    }
+                };
+
+                socket.onclose = () => {
+                    console.log('Desconectado do servidor WebSocket');
+                    Object.values(buttons).forEach(button => button.disabled = true);
+                };
+
+                socket.onerror = error => console.log('Erro no WebSocket:', error);
+            }
+
+            function sendMessage(message) {
+                if (socket && socket.readyState === WebSocket.OPEN) {
+                    socket.send(message);
+                    console.log(`Mensagem "${message}" enviada ao servidor`);
+                } else {
+                    console.log('Não conectado ao servidor WebSocket');
+                }
+            }
+
+            buttons.fullscreenButton.addEventListener('click', () => {
+                enterFullscreenAndLockOrientation();
+                document.getElementById('fullscreenIframe').style.display = 'block';
+            });
+
+            buttons.connectButton.addEventListener('click', () => {
+                connectWebSocket();
+                buttons.connectButton.classList.add('clicked');
+                buttons.connectButton.textContent = 'Conectado';
+            });
+
+            Object.entries(buttons).forEach(([key, button], index) => {
+                if (key.startsWith('button') && index > 1) {
+                    button.addEventListener('click', () => sendMessage(index - 1));
+                }
+            });
+
+            function gameLoop() {
+                const gamepad = navigator.getGamepads()[0];
+                if (gamepad) {
+                    if (gamepad.buttons[0].pressed) {
+                        stopAllSounds();
+                        sounds.somFrente.play();
+                    }
+                    if (gamepad.buttons[6].pressed) {
+                        stopAllSounds();
+                        sounds.somDireita.play();
+                    }
+                    if (gamepad.buttons[4].pressed) {
+                        stopAllSounds();
+                        sounds.somEsquerda.play();
+                    }
+                    if (!gamepad.buttons[0].pressed && !gamepad.buttons[6].pressed && !gamepad.buttons[4].pressed) {
+                        stopAllSounds();
+                    }
+                }
+                requestAnimationFrame(gameLoop);
+            }
+
+            gameLoop();
+        });
+    </script>
+</body>
+</html>
